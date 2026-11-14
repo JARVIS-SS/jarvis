@@ -6,7 +6,7 @@ from backend.app.routes.auth import router as auth_router
 from backend.app.routes.chat import router as api_router
 from backend.app.routes.memory import router as memory_router
 
-app = FastAPI(title='Jarvis API', version='0.4.0')
+app = FastAPI(title='Jarvis API', version='0.5.0')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['http://localhost:3000', 'http://127.0.0.1:3000'],
