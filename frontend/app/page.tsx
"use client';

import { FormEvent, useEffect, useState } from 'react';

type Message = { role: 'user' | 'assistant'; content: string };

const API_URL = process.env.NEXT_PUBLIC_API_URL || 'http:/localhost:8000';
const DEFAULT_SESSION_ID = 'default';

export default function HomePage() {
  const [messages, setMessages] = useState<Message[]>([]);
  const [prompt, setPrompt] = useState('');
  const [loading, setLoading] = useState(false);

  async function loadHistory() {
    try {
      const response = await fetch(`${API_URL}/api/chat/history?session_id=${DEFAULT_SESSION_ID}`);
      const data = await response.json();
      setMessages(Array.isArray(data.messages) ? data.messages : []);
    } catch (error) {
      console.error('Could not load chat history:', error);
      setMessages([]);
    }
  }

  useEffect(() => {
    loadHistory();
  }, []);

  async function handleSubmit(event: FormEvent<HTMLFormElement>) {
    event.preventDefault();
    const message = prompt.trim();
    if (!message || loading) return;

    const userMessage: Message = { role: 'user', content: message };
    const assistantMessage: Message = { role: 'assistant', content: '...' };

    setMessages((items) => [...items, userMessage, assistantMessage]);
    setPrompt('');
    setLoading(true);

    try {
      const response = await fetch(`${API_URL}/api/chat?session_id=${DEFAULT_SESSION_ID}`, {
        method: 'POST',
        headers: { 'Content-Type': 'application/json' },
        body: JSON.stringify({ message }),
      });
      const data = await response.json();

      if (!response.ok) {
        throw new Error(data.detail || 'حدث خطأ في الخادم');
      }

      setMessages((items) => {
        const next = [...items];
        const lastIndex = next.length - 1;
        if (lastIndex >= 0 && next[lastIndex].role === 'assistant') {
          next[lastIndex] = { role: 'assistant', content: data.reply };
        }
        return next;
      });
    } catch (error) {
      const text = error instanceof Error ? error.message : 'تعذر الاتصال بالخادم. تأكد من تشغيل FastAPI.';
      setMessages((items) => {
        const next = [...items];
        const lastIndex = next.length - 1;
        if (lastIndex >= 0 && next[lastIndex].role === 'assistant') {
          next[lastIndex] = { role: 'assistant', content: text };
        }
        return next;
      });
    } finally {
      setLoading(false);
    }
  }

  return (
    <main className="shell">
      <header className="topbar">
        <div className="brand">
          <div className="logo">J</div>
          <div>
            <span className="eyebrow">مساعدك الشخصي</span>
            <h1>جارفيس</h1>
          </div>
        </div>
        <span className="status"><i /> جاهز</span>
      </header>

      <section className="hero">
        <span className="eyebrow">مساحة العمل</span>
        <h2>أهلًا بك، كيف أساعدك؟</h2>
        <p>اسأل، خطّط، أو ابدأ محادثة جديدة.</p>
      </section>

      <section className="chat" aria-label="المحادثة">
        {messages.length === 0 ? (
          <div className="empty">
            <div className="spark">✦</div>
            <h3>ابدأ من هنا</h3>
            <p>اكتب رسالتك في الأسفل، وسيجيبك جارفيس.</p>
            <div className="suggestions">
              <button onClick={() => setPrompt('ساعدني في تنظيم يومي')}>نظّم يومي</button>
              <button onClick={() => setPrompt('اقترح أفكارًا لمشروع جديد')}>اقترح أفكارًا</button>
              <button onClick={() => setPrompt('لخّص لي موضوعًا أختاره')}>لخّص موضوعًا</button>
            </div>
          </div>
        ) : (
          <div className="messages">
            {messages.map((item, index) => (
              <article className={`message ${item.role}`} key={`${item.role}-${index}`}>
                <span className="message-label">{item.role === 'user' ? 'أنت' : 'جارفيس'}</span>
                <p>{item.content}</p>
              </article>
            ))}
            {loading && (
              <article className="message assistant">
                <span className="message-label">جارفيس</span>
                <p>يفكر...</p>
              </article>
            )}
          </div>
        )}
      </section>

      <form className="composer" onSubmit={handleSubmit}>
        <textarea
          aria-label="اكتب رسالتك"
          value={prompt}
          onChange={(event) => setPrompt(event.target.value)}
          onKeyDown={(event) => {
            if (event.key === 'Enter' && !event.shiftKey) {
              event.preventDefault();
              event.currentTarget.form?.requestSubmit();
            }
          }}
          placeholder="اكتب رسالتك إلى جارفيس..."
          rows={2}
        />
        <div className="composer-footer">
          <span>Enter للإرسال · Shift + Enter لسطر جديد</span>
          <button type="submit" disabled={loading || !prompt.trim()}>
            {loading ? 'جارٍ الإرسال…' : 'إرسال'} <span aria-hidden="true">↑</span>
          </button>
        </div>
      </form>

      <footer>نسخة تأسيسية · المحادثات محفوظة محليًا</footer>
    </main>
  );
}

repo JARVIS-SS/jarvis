@@ -1,0 +1,78 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Query
+from openai import OpenAI, OpenAIError
+from pydantic import BaseModel, Field
+
+from backend.app.config import MODEL_NAME, OPENAI_API_KEY
+from backend.app.db import get_connection
+
+router = APIRouter(prefix='/api')
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=12000)
+
+
+@router.get('/chat/history')
+def get_chat_history(session_id: str = Query(default='default')) -> dict[str, list[dict[str, str]]]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT role, content FROM chat_messages WHERE session_id = ? ORDER BY id ASC",
+            (session_id,),
+        ).fetchall()
+
+    return {
+        'messages': [
+            {'role': row['role'], 'content': row['content']} for row in rows
+        ]
+    }
+
+
+@router.post('/chat')
+def chat(request: ChatRequest, session_id: str = Query(default='default')) -> dict[str, str]:
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=422, detail='اكتب رسالة أولًا.')
+
+    if not OPENAI_API_KEY:
+        fallback = 'وصلت رسالتك. لتفعيل الردود الذكية، أضف OPENAI_API_KEY إلى ملف .env ثم أعد تشغيل الخادم.'
+        with get_connection() as conn:
+            conn.execute(
+                'INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)',
+                (session_id, 'user', message),
+            )
+            conn.execute(
+                'INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)',
+                (session_id, 'assistant', fallback),
+            )
+        return {'reply': fallback}
+
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        result = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {
+                    'role': 'system',
+                    'content': 'أنت جارفيس، مساعد شخصي مفيد وواضح. أجب بلغة المستخدم، وبالعربية عند مخاطبتك بالعربية. لا تدّع تنفيذ أفعال خارجية.',
+                },
+                {'role': 'user', 'content': message},
+            ],
+        )
+        reply = result.choices[0].message.content or 'لم يصل رد نصي من النموذج.'
+        with get_connection() as conn:
+            conn.execute(
+                'INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)',
+                (session_id, 'user', message),
+            )
+            conn.execute(
+                'INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)',
+                (session_id, 'assistant', reply),
+            )
+        return {'reply': reply}
+    except OpenAIError:
+        raise HTTPException(
+            status_code=502,
+            detail='تعذر الحصول على رد من مزود الذكاء الاصطناعي. تحقق من المفتاح وإعدادات الحساب.',
+        )
