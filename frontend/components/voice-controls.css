@@ -1,0 +1,9 @@
+.voice-controls { margin: 0 0 12px; padding: 13px 15px; border: 1px solid #ffffff18; border-radius: 15px; background: #0c1725cc; }
+.voice-buttons { display: flex; flex-wrap: wrap; gap: 9px; }
+.voice-button { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid #54d6c477; border-radius: 10px; background: #10232d; color: #bcece5; cursor: pointer; }
+.voice-button:hover:not(:disabled) { background: #17343d; }
+.voice-button:disabled { opacity: .45; cursor: not-allowed; }
+.voice-button.is-recording { border-color: #ff7777aa; background: #401d28; color: #ffc0c0; }
+.voice-status { margin: 10px 0 0; color: #85e7d8; font-size: 13px; }
+.voice-hint { margin: 9px 0 0; color: #738599; font-size: 11px; line-height: 1.5; }
+@media (max-width: 560px) { .voice-buttons { display: grid; grid-template-columns: 1fr; }.voice-button { justify-content: center; } }

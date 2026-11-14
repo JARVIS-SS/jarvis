@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import VoiceControls from '../components/voice-controls';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 type Task = { id: number; title: string; due_at: string | null; completed: boolean; created_at: string };
@@ -182,6 +183,7 @@ export default function HomePage() {
     finally { setLoading(false); }
   }
 
+  const latestReply = [...messages].reverse().find((item) => item.role === 'assistant')?.content || '';
   const dueTasks = tasks.filter((task) => !task.completed && task.due_at && new Date(task.due_at).getTime() <= Date.now());
 
   if (!authReady) return <main className="auth-shell"><p>جارٍ تحميل جارفيس…</p></main>;
@@ -196,7 +198,7 @@ export default function HomePage() {
 
   return <main className="shell">
     <header className="topbar"><div className="brand"><div className="logo">J</div><div><span className="eyebrow">مساعدك الشخصي</span><h1>جارفيس</h1></div></div><div className="account"><span className="status"><i /> {user.email}</span><button className="secondary-button" type="button" onClick={logout}>خروج</button></div></header>
-    <section className="hero"><span className="eyebrow">مساحة العمل</span><h2>أهلًا بك، كيف أساعدك؟</h2><p>محادثاتك ومهامك محفوظة في حسابك.</p></section>
+    <section className="hero"><span className="eyebrow">مساحة العمل</span><h2>أهلًا بك، كيف أساعدك؟</h2><p>محادثاتك ومهامك محفوظة في حسابك. اكتب أو استخدم التحكم الصوتي.</p></section>
     <div className="workspace"><aside className="session-panel"><div className="section-heading"><h2>محادثاتي</h2><button className="new-session" type="button" onClick={createSession}>+ جديدة</button></div><ul className="session-list">{sessions.map((session) => <li className={session.id === activeSession ? 'selected-session' : ''} key={session.id}><button className="session-select" type="button" onClick={() => setActiveSession(session.id)}>{session.title}</button><button className="session-delete" type="button" aria-label={`حذف ${session.title}`} onClick={() => deleteSession(session.id)}>×</button></li>)}</ul></aside>
     <div className="workspace-main">
       <section className="tasks-panel" aria-labelledby="tasks-heading"><div className="section-heading"><div><span className="eyebrow">خطط ليومك</span><h2 id="tasks-heading">المهام والتذكيرات</h2></div><button className="secondary-button" type="button" onClick={enableNotifications}>{notificationsEnabled ? 'الإشعارات مفعّلة' : 'تفعيل الإشعارات'}</button></div>
@@ -204,7 +206,8 @@ export default function HomePage() {
         {taskError && <p className="inline-error" role="alert">{taskError}</p>}{notice && <p className="inline-notice" role="status">{notice}</p>}{dueTasks.length > 0 && <p className="due-banner" role="status">لديك {dueTasks.length} تذكير مستحق الآن.</p>}
         {tasks.length === 0 ? <p className="task-empty">لا توجد مهام في هذه المحادثة بعد.</p> : <ul className="task-list">{tasks.map((task) => <li className={`task-item ${task.completed ? 'is-completed' : ''}`} key={task.id}><button className="task-check" type="button" aria-label={task.completed ? 'إعادة فتح المهمة' : 'إنجاز المهمة'} onClick={() => toggleTask(task)}>{task.completed ? '✓' : ''}</button><div className="task-copy"><span>{task.title}</span><small>{task.due_at ? `موعد التذكير: ${new Date(task.due_at).toLocaleString('ar-EG')}` : 'بدون موعد'}</small></div><button className="delete-button" type="button" aria-label={`حذف ${task.title}`} onClick={() => deleteTask(task.id)}>حذف</button></li>)}</ul>}
       </section>
-      <section className="chat" aria-label="المحادثة">{messages.length === 0 ? <div className="empty"><div className="spark">✦</div><h3>ابدأ من هنا</h3><p>اكتب رسالتك في الأسفل، وسيجيبك جارفيس.</p><div className="suggestions"><button onClick={() => setPrompt('ساعدني في تنظيم يومي')}>نظّم يومي</button><button onClick={() => setPrompt('اقترح أفكارًا لمشروع جديد')}>اقترح أفكارًا</button><button onClick={() => setPrompt('لخّص لي موضوعًا أختاره')}>لخّص موضوعًا</button></div></div> : <div className="messages">{messages.map((item, index) => <article className={`message ${item.role}`} key={`${index}-${item.role}`}><span className="message-label">{item.role === 'user' ? 'أنت' : 'جارفيس'}</span><p>{item.content}</p></article>)}{loading && <article className="message assistant"><span className="message-label">جارفيس</span><p>يفكر...</p></article>}</div>}</section>
+      <section className="chat" aria-label="المحادثة" aria-live="polite">{messages.length === 0 ? <div className="empty"><div className="spark">✦</div><h3>ابدأ من هنا</h3><p>اكتب رسالتك أو اضغط «تحدث إلى جارفيس».</p><div className="suggestions"><button type="button" onClick={() => setPrompt('ساعدني في تنظيم يومي')}>نظّم يومي</button><button type="button" onClick={() => setPrompt('اقترح أفكارًا لمشروع جديد')}>اقترح أفكارًا</button><button type="button" onClick={() => setPrompt('لخّص لي موضوعًا أختاره')}>لخّص موضوعًا</button></div></div> : <div className="messages">{messages.map((item, index) => <article className={`message ${item.role}`} key={`${index}-${item.role}`}><span className="message-label">{item.role === 'user' ? 'أنت' : 'جارفيس'}</span><p>{item.content}</p></article>)}{loading && <article className="message assistant"><span className="message-label">جارفيس</span><p>يفكر...</p></article>}</div>}</section>
+      <VoiceControls onTranscript={(transcript) => setPrompt((current) => current ? `${current} ${transcript}` : transcript)} textToSpeak={latestReply} />
       <form className="composer" onSubmit={handleSubmit}><textarea aria-label="اكتب رسالتك" value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder="اكتب رسالتك إلى جارفيس..." rows={2} /><div className="composer-footer"><span>Enter للإرسال · Shift + Enter لسطر جديد</span><button type="submit" disabled={loading || !prompt.trim()}>{loading ? 'جارٍ الإرسال…' : 'إرسال'} <span aria-hidden="true">↑</span></button></div></form>
     </div></div><footer>المحادثات والمهام مرتبطة بحسابك · تذكيرات المتصفح تعمل عند فتح التطبيق</footer>
   </main>;
