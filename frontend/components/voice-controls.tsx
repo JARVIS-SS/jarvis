@@ -1,5 +1,4 @@
-'use client';
-
+import './voice-controls.css';
 import { useEffect, useRef, useState } from 'react';
 
 type SpeechRecognitionResultLike = { isFinal: boolean; 0: { transcript: string } };
@@ -42,7 +41,6 @@ export default function VoiceControls({ onTranscript, textToSpeak }: VoiceContro
       setMessage('التعرّف على الصوت غير مدعوم في هذا المتصفح. جرّب Chrome أو Edge أو اكتب رسالتك.');
       return;
     }
-
     if (recording) {
       recognitionRef.current?.stop();
       setRecording(false);
