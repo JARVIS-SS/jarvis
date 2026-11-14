@@ -7,7 +7,7 @@
 1. انسخ `.env.example` إلى `.env` وأضف مفتاح OpenAI إن أردت ردود النموذج.
 2. شغّل الواجهة: `npm install --prefix frontend` ثم `npm run dev --prefix frontend`.
 3. في نافذة ثانية: `python -m venv .venv`، فعّل البيئة الافتراضية، ثم `pip install -r backend/requirements.txt` و`uvicorn backend.app.main:app --reload --port 8000`.
-4. افتح `http://localhost:3000` وسجّل حسابًا. صفحة الذاكرة: `http://localhost:3000/memory`.
+4. افتح `http://localhost:3000` وسجّل حسابًا. رابط **ذاكرتي** متاح من شريط التنقل أعلى التطبيق، أو مباشرة عبر `http://localhost:3000/memory`.
 
 ## الميزات
 - حسابات محلية وسجل محادثات منفصل.

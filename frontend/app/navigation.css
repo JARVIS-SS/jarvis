@@ -1,0 +1,6 @@
+.app-navigation { width: min(1180px, calc(100% - 48px)); min-height: 48px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ffffff12; }
+.app-navigation a { color: #b7c7d4; text-decoration: none; font-size: 13px; }
+.app-navigation a:hover, .app-navigation a:focus-visible { color: #75eedb; }
+.app-navigation-brand { font-weight: 700; letter-spacing: .04em; }
+.app-navigation-memory { padding: 7px 12px; border: 1px solid #54d6c455; border-radius: 999px; background: #10232d; }
+@media (max-width: 600px) { .app-navigation { width: calc(100% - 32px); } }
